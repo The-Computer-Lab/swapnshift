@@ -20,6 +20,11 @@ app.get('/', (req, res) => {
   res.json({ message: 'SwapNShift API is running' });
 });
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+// Start server locally; on Vercel the app is exported below
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  });
+}
+
+module.exports = app;
