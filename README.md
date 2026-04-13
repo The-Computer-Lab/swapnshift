@@ -261,8 +261,25 @@ Make sure `backend/.env` is listed in `.gitignore` — never commit secrets.
 1. Go to **vercel.com** and sign in with GitHub
 2. Click **Add New Project** and import the `swapnshift` repo
 3. Set the **Root Directory** to `frontend`
-4. Add environment variable: `VITE_API_URL` = your Railway backend URL
+4. Add environment variable: `VITE_API_URL` = `https://swapnshift-backend.vercel.app`
 5. Click **Deploy**
+
+---
+
+## Live URLs
+
+| Service | URL |
+|---|---|
+| Frontend | https://swapnshift.vercel.app |
+| Backend API | https://swapnshift-backend.vercel.app |
+
+---
+
+## Planned improvements
+
+- User profile/account editing (name, email, password)
+- PWA support (add to home screen on Android and iOS)
+- Custom domain setup (swapnshift.com → Vercel)
 
 ---
 
