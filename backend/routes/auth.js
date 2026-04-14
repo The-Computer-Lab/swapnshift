@@ -4,6 +4,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { createClient } = require('@supabase/supabase-js');
 const { authenticateToken } = require('../middleware/auth');
+const { sendAdminRegistrationEmail } = require('../utils/email');
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
@@ -22,6 +23,11 @@ router.post('/register', async (req, res) => {
       .select();
 
     if (error) return res.status(400).json({ error: error.message });
+
+    if (process.env.ADMIN_EMAIL) {
+      sendAdminRegistrationEmail({ name, email, shift })
+        .catch(err => console.error('Admin registration email failed:', err.message));
+    }
 
     res.json({ message: 'Registration successful — awaiting admin approval', user: data[0] });
   } catch (err) {

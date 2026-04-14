@@ -42,7 +42,7 @@ A shift-swap management web app built by G. Rhodes, specifically for AGR grafter
 | **Supabase** | Hosted Postgres database |
 | **Resend** | Transactional email (verified domain: swapnshift.com) |
 | **Cloudflare** | Domain registrar and DNS |
-| **Railway** | Backend hosting |
+| **Vercel** | Backend hosting |
 | **Vercel** | Frontend hosting |
 
 ---
@@ -245,14 +245,14 @@ Make sure `backend/.env` is listed in `.gitignore` — never commit secrets.
 
 ---
 
-## Deploying the backend (Railway)
+## Deploying the backend (Vercel)
 
-1. Go to **railway.app** and sign in with GitHub
-2. Click **New Project → Deploy from GitHub repo** and select `swapnshift`
-3. Click **Add service → GitHub repo**, set the **Root Directory** to `backend`
-4. Go to the service **Variables** tab and add all values from `backend/.env`
-5. Railway will auto-deploy — once live, copy the public URL from the **Settings** tab
-6. Update `BACKEND_URL` in `frontend/src/api.js` to the Railway URL
+1. Go to **vercel.com** and sign in with GitHub
+2. Click **Add New Project** and import the `swapnshift` repo
+3. Set the **Root Directory** to `backend`
+4. Add all environment variables from `backend/.env` under **Settings → Environment Variables**
+5. Click **Deploy** — once live, copy the public URL
+6. Update `VITE_API_URL` in the frontend project's environment variables to the backend URL
 
 ---
 

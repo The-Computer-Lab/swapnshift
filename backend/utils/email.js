@@ -114,4 +114,22 @@ async function sendCounterRejectedEmail({ acceptor, requesterName, swap }) {
   });
 }
 
-module.exports = { sendWelcomeEmail, sendSwapNotificationEmail, sendSwapAcceptedEmails, sendCounterOfferEmail, sendCounterRejectedEmail };
+async function sendAdminRegistrationEmail({ name, email, shift }) {
+  return resend.emails.send({
+    from: FROM,
+    to: process.env.ADMIN_EMAIL,
+    subject: `New registration — ${name} is awaiting approval`,
+    html: `
+      <p>A new user has registered on SwapNShift and is awaiting your approval:</p>
+      <ul>
+        <li><strong>Name:</strong> ${name}</li>
+        <li><strong>Email:</strong> ${email}</li>
+        <li><strong>Shift group:</strong> ${shift}</li>
+      </ul>
+      <p>Log in to the admin panel to approve or reject their account.</p>
+      <p>— SwapNShift</p>
+    `,
+  });
+}
+
+module.exports = { sendWelcomeEmail, sendSwapNotificationEmail, sendSwapAcceptedEmails, sendCounterOfferEmail, sendCounterRejectedEmail, sendAdminRegistrationEmail };

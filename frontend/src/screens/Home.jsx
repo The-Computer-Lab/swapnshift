@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { api } from '../api';
+import HowToUse from '../components/HowToUse';
 
 // ── Shift rota helpers ────────────────────────────────────────────────────────
 
@@ -122,6 +123,7 @@ function SixMonthCalendar({ shiftGroup }) {
 
 export default function Home({ user, onLogout, onGoAdmin, onGoLanding, onProfileUpdated }) {
   const [activeTab, setActiveTab] = useState('rota');
+  const [showGuide, setShowGuide] = useState(false);
 
   // ── Swaps state ──
   const [swaps, setSwaps] = useState([]);
@@ -352,6 +354,7 @@ export default function Home({ user, onLogout, onGoAdmin, onGoLanding, onProfile
 
   return (
     <div className="home">
+      {showGuide && <HowToUse onClose={() => setShowGuide(false)} />}
       <header>
         <button className="logo-btn" onClick={onGoLanding}>SwapNShift</button>
         <button className="link-btn" onClick={handleLogout}>Sign out</button>
@@ -578,6 +581,15 @@ export default function Home({ user, onLogout, onGoAdmin, onGoLanding, onProfile
                   {profileLoading ? 'Saving…' : 'Save changes'}
                 </button>
               </form>
+            </section>
+
+            <section className="panel">
+              <button className="how-to-link how-to-link--block" onClick={() => setShowGuide(true)}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                  <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+                How to use SwapNShift
+              </button>
             </section>
           </div>
         )}

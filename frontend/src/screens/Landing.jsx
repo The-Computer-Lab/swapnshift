@@ -1,6 +1,11 @@
+import { useState } from 'react';
+import HowToUse from '../components/HowToUse';
+
 export default function Landing({ user, onGoLogin, onGoRegister, onGoApp, onLogout }) {
+  const [showGuide, setShowGuide] = useState(false);
   return (
     <div className="landing">
+      {showGuide && <HowToUse onClose={() => setShowGuide(false)} />}
 
       {/* Nav */}
       <nav className="landing-nav">
@@ -44,6 +49,7 @@ export default function Landing({ user, onGoLogin, onGoRegister, onGoApp, onLogo
             <button className="btn-primary" onClick={onGoRegister}>Get started</button>
             <button className="btn-ghost" onClick={onGoLogin}>I already have an account</button>
           </div>
+          <button className="how-to-link" onClick={() => setShowGuide(true)}>How does it work?</button>
         </div>
       </section>
 
