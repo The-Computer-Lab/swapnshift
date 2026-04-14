@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { createClient } = require('@supabase/supabase-js');
 const { authenticateToken } = require('../middleware/auth');
-const { sendSwapNotificationEmail } = require('../utils/email');
+const { sendSwapNotificationEmail, sendSwapAcceptedEmails } = require('../utils/email');
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
@@ -93,6 +93,22 @@ router.put('/:id/accept', authenticateToken, async (req, res) => {
       .select();
 
     if (error) return res.status(400).json({ error: error.message });
+
+    // Fetch requester details and send confirmation emails to both parties
+    supabase
+      .from('users')
+      .select('name, email')
+      .eq('id', swap.requester_id)
+      .single()
+      .then(({ data: requester }) => {
+        if (requester) {
+          sendSwapAcceptedEmails({
+            requester,
+            acceptor: { name: req.user.name, email: req.user.email },
+            swap,
+          }).catch(err => console.error('Swap accepted email failed:', err.message));
+        }
+      });
 
     res.json({ swap: data[0] });
   } catch (err) {

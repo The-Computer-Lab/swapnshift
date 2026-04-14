@@ -41,4 +41,37 @@ async function sendSwapNotificationEmail({ users, swap, requesterName }) {
   );
 }
 
-module.exports = { sendWelcomeEmail, sendSwapNotificationEmail };
+async function sendSwapAcceptedEmails({ requester, acceptor, swap }) {
+  const date = new Date(swap.shift_date).toLocaleDateString('en-GB', {
+    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+  });
+
+  await Promise.all([
+    // Email to the person who posted the swap
+    resend.emails.send({
+      from: FROM,
+      to: requester.email,
+      subject: `Your shift has been covered — ${swap.shift_date}`,
+      html: `
+        <p>Hi ${requester.name},</p>
+        <p><strong>${acceptor.name}</strong> has accepted your request to cover your ${swap.shift_time} shift on <strong>${date}</strong>.</p>
+        ${swap.notes ? `<p>Notes: ${swap.notes}</p>` : ''}
+        <p>— The SwapNShift team</p>
+      `,
+    }),
+    // Email to the person accepting the swap
+    resend.emails.send({
+      from: FROM,
+      to: acceptor.email,
+      subject: `Shift swap confirmed — ${swap.shift_date}`,
+      html: `
+        <p>Hi ${acceptor.name},</p>
+        <p>You have agreed to cover <strong>${requester.name}</strong>'s ${swap.shift_time} shift on <strong>${date}</strong>.</p>
+        ${swap.notes ? `<p>Notes: ${swap.notes}</p>` : ''}
+        <p>— The SwapNShift team</p>
+      `,
+    }),
+  ]);
+}
+
+module.exports = { sendWelcomeEmail, sendSwapNotificationEmail, sendSwapAcceptedEmails };
