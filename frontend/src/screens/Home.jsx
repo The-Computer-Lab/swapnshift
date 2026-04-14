@@ -152,7 +152,8 @@ export default function Home({ user, onLogout, onGoAdmin, onGoLanding, onProfile
   const [historyFetched, setHistoryFetched] = useState(false);
 
   // ── Profile state ──
-  const [profileName, setProfileName] = useState(user.name);
+  const [profileFirstName, setProfileFirstName] = useState(user.name.split(' ')[0] || '');
+  const [profileLastName, setProfileLastName] = useState(user.name.split(' ').slice(1).join(' ') || '');
   const [profileEmail, setProfileEmail] = useState(user.email);
   const [profileShift, setProfileShift] = useState(user.shift);
   const [currentPassword, setCurrentPassword] = useState('');
@@ -167,7 +168,8 @@ export default function Home({ user, onLogout, onGoAdmin, onGoLanding, onProfile
   useEffect(() => { fetchSwaps(); fetchPendingSwaps(); }, []);
 
   useEffect(() => {
-    setProfileName(user.name);
+    setProfileFirstName(user.name.split(' ')[0] || '');
+    setProfileLastName(user.name.split(' ').slice(1).join(' ') || '');
     setProfileEmail(user.email);
     setProfileShift(user.shift);
   }, [user.name, user.email, user.shift]);
@@ -318,8 +320,9 @@ export default function Home({ user, onLogout, onGoAdmin, onGoLanding, onProfile
     setProfileError('');
     setProfileSuccess('');
     if (newPassword && newPassword !== confirmPassword) { setProfileError('New passwords do not match.'); return; }
+    const fullName = `${profileFirstName.trim()} ${profileLastName.trim()}`;
     const fields = {};
-    if (profileName !== user.name) fields.name = profileName;
+    if (fullName !== user.name) fields.name = fullName;
     if (profileEmail !== user.email) fields.email = profileEmail;
     if (profileShift !== user.shift) fields.shift = profileShift;
     if (newPassword) { fields.currentPassword = currentPassword; fields.newPassword = newPassword; }
@@ -542,8 +545,10 @@ export default function Home({ user, onLogout, onGoAdmin, onGoLanding, onProfile
             <section className="panel">
               <h2>Your profile</h2>
               <form onSubmit={handleProfileSave} style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                <label>Name</label>
-                <input type="text" value={profileName} onChange={e => { setProfileSuccess(''); setProfileError(''); setProfileName(e.target.value); }} required />
+                <label>First name</label>
+                <input type="text" value={profileFirstName} onChange={e => { setProfileSuccess(''); setProfileError(''); setProfileFirstName(e.target.value); }} required />
+                <label>Last name</label>
+                <input type="text" value={profileLastName} onChange={e => { setProfileSuccess(''); setProfileError(''); setProfileLastName(e.target.value); }} required />
 
                 <label>Email</label>
                 <input type="email" value={profileEmail} onChange={e => { setProfileSuccess(''); setProfileError(''); setProfileEmail(e.target.value); }} required />

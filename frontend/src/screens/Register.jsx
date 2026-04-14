@@ -4,7 +4,7 @@ import { api } from '../api';
 const SHIFTS = ['J', 'K', 'L', 'M', 'N'];
 
 export default function Register({ onGoLogin, onGoBack }) {
-  const [form, setForm] = useState({ name: '', email: '', password: '', shift: '' });
+  const [form, setForm] = useState({ firstName: '', lastName: '', email: '', password: '', shift: '' });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -16,9 +16,10 @@ export default function Register({ onGoLogin, onGoBack }) {
   async function handleSubmit(e) {
     e.preventDefault();
     setError('');
+    const fullName = `${form.firstName.trim()} ${form.lastName.trim()}`;
     setLoading(true);
     try {
-      await api.register(form.name, form.email, form.password, form.shift);
+      await api.register(fullName, form.email, form.password, form.shift);
       setSuccess(true);
     } catch (err) {
       setError(err.message);
@@ -47,13 +48,20 @@ export default function Register({ onGoLogin, onGoBack }) {
         <h1>SwapNShift</h1>
         <h2>Create account</h2>
         <form onSubmit={handleSubmit}>
-          <label>Full name</label>
+          <label>First name</label>
           <input
             type="text"
-            value={form.name}
-            onChange={set('name')}
+            value={form.firstName}
+            onChange={set('firstName')}
             required
             autoFocus
+          />
+          <label>Last name</label>
+          <input
+            type="text"
+            value={form.lastName}
+            onChange={set('lastName')}
+            required
           />
           <label>Email</label>
           <input
@@ -70,7 +78,7 @@ export default function Register({ onGoLogin, onGoBack }) {
             required
             minLength={6}
           />
-          <label>Shift</label>
+          <label>Shift group</label>
           <select value={form.shift} onChange={set('shift')} required>
             <option value="">Select shift…</option>
             {SHIFTS.map(c => (
@@ -84,9 +92,7 @@ export default function Register({ onGoLogin, onGoBack }) {
         </form>
         <p className="switch">
           Already have an account?{' '}
-          <button className="link-btn" onClick={onGoLogin}>
-            Sign in
-          </button>
+          <button className="link-btn" onClick={onGoLogin}>Sign in</button>
         </p>
       </div>
     </div>
