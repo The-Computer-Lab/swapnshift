@@ -100,6 +100,14 @@ router.delete('/users/:id', async (req, res) => {
   }
 
   try {
+    // Remove swaps involving this user first to avoid foreign key errors
+    const { error: swapError } = await supabase
+      .from('swaps')
+      .delete()
+      .or(`requester_id.eq.${id},acceptor_id.eq.${id}`);
+
+    if (swapError) return res.status(400).json({ error: swapError.message });
+
     const { data, error } = await supabase
       .from('users')
       .delete()
