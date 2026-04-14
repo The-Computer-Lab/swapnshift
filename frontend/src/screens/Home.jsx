@@ -430,74 +430,48 @@ export default function Home({ user, onLogout, onGoAdmin, onGoLanding, onProfile
               {!loadingSwaps && !swapError && swaps.length === 0 && (
                 <p className="muted">No open swaps right now.</p>
               )}
-              {swaps.length > 0 && (
-                <div className="table-scroll">
-                  <table>
-                    <thead>
-                      <tr>
-                        <th>Date</th>
-                        <th>Type</th>
-                        <th>Posted by</th>
-                        <th>Shift</th>
-                        <th>Notes</th>
-                        <th></th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {swaps.map(swap => (
-                        <>
-                          <tr key={swap.id}>
-                            <td>{formatDate(swap.shift_date)}</td>
-                            <td>{swap.shift_time}</td>
-                            <td>{swap.requester?.name ?? '—'}</td>
-                            <td>{swap.requester?.shift ?? '—'}</td>
-                            <td>{swap.notes ?? '—'}</td>
-                            <td>
-                              {swap.requester_id === user.id ? (
-                                <button className="decline-btn" onClick={() => handleDecline(swap.id)}>Remove</button>
-                              ) : (
-                                <button className="accept-btn" onClick={() => handleAccept(swap.id)}>
-                                  {acceptingId === swap.id ? 'Cancel' : 'Accept'}
-                                </button>
-                              )}
-                            </td>
-                          </tr>
-                          {acceptingId === swap.id && (
-                            <tr key={`${swap.id}-counter`}>
-                              <td colSpan={6}>
-                                <div className="counter-form">
-                                  <p className="counter-form-title">Which shift do you want <strong>{swap.requester?.name}</strong> to cover in return?</p>
-                                  <div className="counter-form-fields">
-                                    <div className="field">
-                                      <label>Date</label>
-                                      <input type="date" value={counterDate} onChange={e => { setCounterError(''); setCounterDate(e.target.value); }} />
-                                    </div>
-                                    <div className="field">
-                                      <label>Shift type</label>
-                                      <select value={counterShiftTime} onChange={e => { setCounterError(''); setCounterShiftTime(e.target.value); }}>
-                                        <option value="">Select…</option>
-                                        <option value="Day">Day</option>
-                                        <option value="Night">Night</option>
-                                      </select>
-                                    </div>
-                                    <button className="accept-btn" style={{ alignSelf: 'flex-end' }} onClick={() => handleOfferCounter(swap.id)} disabled={counterLoading}>
-                                      {counterLoading ? 'Sending…' : 'Send offer'}
-                                    </button>
-                                    <button className="decline-btn" style={{ alignSelf: 'flex-end' }} onClick={() => setAcceptingId(null)}>
-                                      Cancel
-                                    </button>
-                                  </div>
-                                  {counterError && <p className="error" style={{ marginTop: '0.5rem' }}>{counterError}</p>}
-                                </div>
-                              </td>
-                            </tr>
-                          )}
-                        </>
-                      ))}
-                    </tbody>
-                  </table>
+              {swaps.map(swap => (
+                <div key={swap.id} className="swap-card">
+                  <div className="swap-card-header">
+                    <span className="swap-card-date">{formatDateLong(swap.shift_date)}</span>
+                    <span className={`swap-card-type swap-card-type--${swap.shift_time.toLowerCase()}`}>{swap.shift_time}</span>
+                  </div>
+                  <div className="swap-card-meta">
+                    <span><strong>{swap.requester?.name ?? '—'}</strong> · Shift {swap.requester?.shift ?? '—'}</span>
+                    {swap.notes && <span className="swap-card-notes">{swap.notes}</span>}
+                  </div>
+                  {swap.requester_id === user.id ? (
+                    <button className="decline-btn" onClick={() => handleDecline(swap.id)}>Remove my request</button>
+                  ) : acceptingId === swap.id ? (
+                    <div className="counter-form">
+                      <p className="counter-form-title">Which shift do you want <strong>{swap.requester?.name}</strong> to cover in return?</p>
+                      <div className="counter-form-fields">
+                        <div className="field">
+                          <label>Date</label>
+                          <input type="date" value={counterDate} onChange={e => { setCounterError(''); setCounterDate(e.target.value); }} />
+                        </div>
+                        <div className="field">
+                          <label>Shift type</label>
+                          <select value={counterShiftTime} onChange={e => { setCounterError(''); setCounterShiftTime(e.target.value); }}>
+                            <option value="">Select…</option>
+                            <option value="Day">Day</option>
+                            <option value="Night">Night</option>
+                          </select>
+                        </div>
+                      </div>
+                      {counterError && <p className="error" style={{ marginTop: '0.5rem' }}>{counterError}</p>}
+                      <div className="action-btns" style={{ marginTop: '0.75rem' }}>
+                        <button className="accept-btn" onClick={() => handleOfferCounter(swap.id)} disabled={counterLoading}>
+                          {counterLoading ? 'Sending…' : 'Send offer'}
+                        </button>
+                        <button className="decline-btn" onClick={() => setAcceptingId(null)}>Cancel</button>
+                      </div>
+                    </div>
+                  ) : (
+                    <button className="accept-btn" onClick={() => handleAccept(swap.id)}>Accept & propose swap</button>
+                  )}
                 </div>
-              )}
+              ))}
 
             {/* Pending your confirmation */}
             {pendingSwaps.filter(s => s.requester_id === user.id).length > 0 && (

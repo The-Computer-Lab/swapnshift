@@ -627,6 +627,55 @@ tr:last-child td { border-bottom: none; }
   margin: 0 auto;
 }
 
+/* ── Swap cards ── */
+.swap-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 1rem;
+  margin-bottom: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.swap-card:last-child { margin-bottom: 0; }
+
+.swap-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.swap-card-date {
+  font-weight: 700;
+  font-size: 0.92rem;
+  color: #1a1a2e;
+}
+
+.swap-card-type {
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 0.2rem 0.65rem;
+  border-radius: 999px;
+}
+
+.swap-card-type--day   { background: #eff6ff; color: #1d4ed8; }
+.swap-card-type--night { background: #f5f3ff; color: #6d28d9; }
+
+.swap-card-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  font-size: 0.87rem;
+  color: #555;
+}
+
+.swap-card-notes {
+  color: #888;
+  font-size: 0.82rem;
+}
+
 /* ── Counter-offer form ── */
 .counter-form {
   background: #f5f3ff;
