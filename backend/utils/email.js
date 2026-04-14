@@ -74,4 +74,44 @@ async function sendSwapAcceptedEmails({ requester, acceptor, swap }) {
   ]);
 }
 
-module.exports = { sendWelcomeEmail, sendSwapNotificationEmail, sendSwapAcceptedEmails };
+async function sendCounterOfferEmail({ requester, acceptor, swap, counter_date, counter_shift_time }) {
+  const swapDate = new Date(swap.shift_date).toLocaleDateString('en-GB', {
+    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+  });
+  const counterDate = new Date(counter_date).toLocaleDateString('en-GB', {
+    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+  });
+
+  return resend.emails.send({
+    from: FROM,
+    to: requester.email,
+    subject: `${acceptor.name} has offered to cover your shift — response needed`,
+    html: `
+      <p>Hi ${requester.name},</p>
+      <p><strong>${acceptor.name}</strong> has offered to cover your ${swap.shift_time} shift on <strong>${swapDate}</strong>.</p>
+      <p>In return, they are asking you to cover their <strong>${counter_shift_time} shift on ${counterDate}</strong>.</p>
+      <p>Log in to SwapNShift to accept or decline this offer.</p>
+      <p>— The SwapNShift team</p>
+    `,
+  });
+}
+
+async function sendCounterRejectedEmail({ acceptor, requesterName, swap }) {
+  const swapDate = new Date(swap.shift_date).toLocaleDateString('en-GB', {
+    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+  });
+
+  return resend.emails.send({
+    from: FROM,
+    to: acceptor.email,
+    subject: `Your swap offer was not accepted`,
+    html: `
+      <p>Hi ${acceptor.name},</p>
+      <p><strong>${requesterName}</strong> has declined your offer to swap shifts for the ${swap.shift_time} shift on <strong>${swapDate}</strong>.</p>
+      <p>The shift is back on the open swap board if you'd like to make a different offer.</p>
+      <p>— The SwapNShift team</p>
+    `,
+  });
+}
+
+module.exports = { sendWelcomeEmail, sendSwapNotificationEmail, sendSwapAcceptedEmails, sendCounterOfferEmail, sendCounterRejectedEmail };

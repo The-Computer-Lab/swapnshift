@@ -133,6 +133,17 @@ export default function Home({ user, onLogout, onGoAdmin, onGoLanding, onProfile
   const [formLoading, setFormLoading] = useState(false);
   const [formSuccess, setFormSuccess] = useState('');
 
+  // ── Pending swaps (awaiting confirmation) state ──
+  const [pendingSwaps, setPendingSwaps] = useState([]);
+  const [loadingPending, setLoadingPending] = useState(true);
+
+  // ── Counter-offer form state ──
+  const [acceptingId, setAcceptingId] = useState(null); // which swap is being accepted
+  const [counterDate, setCounterDate] = useState('');
+  const [counterShiftTime, setCounterShiftTime] = useState('');
+  const [counterError, setCounterError] = useState('');
+  const [counterLoading, setCounterLoading] = useState(false);
+
   // ── History state ──
   const [history, setHistory] = useState([]);
   const [historyLoading, setHistoryLoading] = useState(false);
@@ -153,7 +164,7 @@ export default function Home({ user, onLogout, onGoAdmin, onGoLanding, onProfile
 
   const rotaDays = getNext14Days(user.shift);
 
-  useEffect(() => { fetchSwaps(); }, []);
+  useEffect(() => { fetchSwaps(); fetchPendingSwaps(); }, []);
 
   useEffect(() => {
     setProfileName(user.name);
@@ -175,6 +186,63 @@ export default function Home({ user, onLogout, onGoAdmin, onGoLanding, onProfile
       setSwapError(err.message);
     } finally {
       setLoadingSwaps(false);
+    }
+  }
+
+  async function fetchPendingSwaps() {
+    setLoadingPending(true);
+    try {
+      const data = await api.getPendingSwaps();
+      setPendingSwaps(data.swaps);
+    } catch (err) {
+      // silently fail — not critical
+    } finally {
+      setLoadingPending(false);
+    }
+  }
+
+  async function handleOfferCounter(swapId) {
+    setCounterError('');
+    if (!counterDate || !counterShiftTime) {
+      setCounterError('Please enter a date and shift type.');
+      return;
+    }
+    setCounterLoading(true);
+    try {
+      await api.acceptSwap(swapId, counterDate, counterShiftTime);
+      setAcceptingId(null);
+      setCounterDate('');
+      setCounterShiftTime('');
+      setActionMsg({ text: 'Offer sent — waiting for their confirmation.', type: 'success' });
+      fetchSwaps();
+      fetchPendingSwaps();
+    } catch (err) {
+      setCounterError(err.message);
+    } finally {
+      setCounterLoading(false);
+    }
+  }
+
+  async function handleConfirm(id) {
+    setActionMsg(null);
+    try {
+      await api.confirmSwap(id);
+      setActionMsg({ text: 'Swap confirmed! Both parties have been notified.', type: 'success' });
+      fetchPendingSwaps();
+    } catch (err) {
+      setActionMsg({ text: err.message, type: 'error' });
+    }
+  }
+
+  async function handleRejectCounter(id) {
+    setActionMsg(null);
+    try {
+      await api.rejectCounter(id);
+      setActionMsg({ text: 'Counter-offer declined. Swap is back on the board.', type: 'success' });
+      fetchSwaps();
+      fetchPendingSwaps();
+    } catch (err) {
+      setActionMsg({ text: err.message, type: 'error' });
     }
   }
 
@@ -227,15 +295,11 @@ export default function Home({ user, onLogout, onGoAdmin, onGoLanding, onProfile
     }
   }
 
-  async function handleAccept(id) {
-    setActionMsg(null);
-    try {
-      await api.acceptSwap(id);
-      setActionMsg({ text: 'Swap accepted.', type: 'success' });
-      fetchSwaps();
-    } catch (err) {
-      setActionMsg({ text: err.message, type: 'error' });
-    }
+  function handleAccept(id) {
+    setCounterError('');
+    setCounterDate('');
+    setCounterShiftTime('');
+    setAcceptingId(id);
   }
 
   async function handleDecline(id) {
@@ -381,25 +445,90 @@ export default function Home({ user, onLogout, onGoAdmin, onGoLanding, onProfile
                     </thead>
                     <tbody>
                       {swaps.map(swap => (
-                        <tr key={swap.id}>
-                          <td>{formatDate(swap.shift_date)}</td>
-                          <td>{swap.shift_time}</td>
-                          <td>{swap.requester?.name ?? '—'}</td>
-                          <td>{swap.requester?.shift ?? '—'}</td>
-                          <td>{swap.notes ?? '—'}</td>
-                          <td>
-                            {swap.requester_id === user.id ? (
-                              <button className="decline-btn" onClick={() => handleDecline(swap.id)}>Remove</button>
-                            ) : (
-                              <button className="accept-btn" onClick={() => handleAccept(swap.id)}>Accept</button>
-                            )}
-                          </td>
-                        </tr>
+                        <>
+                          <tr key={swap.id}>
+                            <td>{formatDate(swap.shift_date)}</td>
+                            <td>{swap.shift_time}</td>
+                            <td>{swap.requester?.name ?? '—'}</td>
+                            <td>{swap.requester?.shift ?? '—'}</td>
+                            <td>{swap.notes ?? '—'}</td>
+                            <td>
+                              {swap.requester_id === user.id ? (
+                                <button className="decline-btn" onClick={() => handleDecline(swap.id)}>Remove</button>
+                              ) : (
+                                <button className="accept-btn" onClick={() => handleAccept(swap.id)}>
+                                  {acceptingId === swap.id ? 'Cancel' : 'Accept'}
+                                </button>
+                              )}
+                            </td>
+                          </tr>
+                          {acceptingId === swap.id && (
+                            <tr key={`${swap.id}-counter`}>
+                              <td colSpan={6}>
+                                <div className="counter-form">
+                                  <p className="counter-form-title">Which shift do you want <strong>{swap.requester?.name}</strong> to cover in return?</p>
+                                  <div className="counter-form-fields">
+                                    <div className="field">
+                                      <label>Date</label>
+                                      <input type="date" value={counterDate} onChange={e => { setCounterError(''); setCounterDate(e.target.value); }} />
+                                    </div>
+                                    <div className="field">
+                                      <label>Shift type</label>
+                                      <select value={counterShiftTime} onChange={e => { setCounterError(''); setCounterShiftTime(e.target.value); }}>
+                                        <option value="">Select…</option>
+                                        <option value="Day">Day</option>
+                                        <option value="Night">Night</option>
+                                      </select>
+                                    </div>
+                                    <button className="accept-btn" style={{ alignSelf: 'flex-end' }} onClick={() => handleOfferCounter(swap.id)} disabled={counterLoading}>
+                                      {counterLoading ? 'Sending…' : 'Send offer'}
+                                    </button>
+                                    <button className="decline-btn" style={{ alignSelf: 'flex-end' }} onClick={() => setAcceptingId(null)}>
+                                      Cancel
+                                    </button>
+                                  </div>
+                                  {counterError && <p className="error" style={{ marginTop: '0.5rem' }}>{counterError}</p>}
+                                </div>
+                              </td>
+                            </tr>
+                          )}
+                        </>
                       ))}
                     </tbody>
                   </table>
                 </div>
               )}
+
+            {/* Pending your confirmation */}
+            {pendingSwaps.filter(s => s.requester_id === user.id).length > 0 && (
+              <div style={{ marginTop: '1.5rem' }}>
+                <h2>Awaiting your response</h2>
+                {pendingSwaps.filter(s => s.requester_id === user.id).map(swap => (
+                  <div key={swap.id} className="pending-card">
+                    <p><strong>{swap.acceptor?.name}</strong> has offered to cover your <strong>{swap.shift_time}</strong> shift on <strong>{formatDateLong(swap.shift_date)}</strong>.</p>
+                    <p className="pending-counter">In return they want you to cover their <strong>{swap.counter_shift_time}</strong> shift on <strong>{formatDateLong(swap.counter_date)}</strong>.</p>
+                    {actionMsg && <p className={actionMsg.type === 'success' ? 'success' : 'error'}>{actionMsg.text}</p>}
+                    <div className="action-btns" style={{ marginTop: '0.75rem' }}>
+                      <button className="accept-btn" onClick={() => handleConfirm(swap.id)}>Accept swap</button>
+                      <button className="decline-btn" onClick={() => handleRejectCounter(swap.id)}>Decline</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Offers you've made, waiting on them */}
+            {pendingSwaps.filter(s => s.acceptor_id === user.id).length > 0 && (
+              <div style={{ marginTop: '1.5rem' }}>
+                <h2>Offers you've made</h2>
+                {pendingSwaps.filter(s => s.acceptor_id === user.id).map(swap => (
+                  <div key={swap.id} className="pending-card pending-card--waiting">
+                    <p>You offered to cover <strong>{swap.requester?.name}</strong>'s <strong>{swap.shift_time}</strong> shift on <strong>{formatDateLong(swap.shift_date)}</strong>.</p>
+                    <p className="pending-counter">Waiting for them to confirm they'll cover your <strong>{swap.counter_shift_time}</strong> shift on <strong>{formatDateLong(swap.counter_date)}</strong>.</p>
+                  </div>
+                ))}
+              </div>
+            )}
             </section>
           </div>
         )}

@@ -30,11 +30,15 @@ export const api = {
     request('/api/auth/register', { method: 'POST', body: { name, email, password, shift }, auth: false }),
 
   getSwaps: () => request('/api/swaps'),
+  getPendingSwaps: () => request('/api/swaps/pending'),
 
   createSwap: (shift_date, shift_time, notes) =>
     request('/api/swaps', { method: 'POST', body: { shift_date, shift_time, notes } }),
 
-  acceptSwap: (id) => request(`/api/swaps/${id}/accept`, { method: 'PUT' }),
+  acceptSwap: (id, counter_date, counter_shift_time) =>
+    request(`/api/swaps/${id}/accept`, { method: 'PUT', body: { counter_date, counter_shift_time } }),
+  confirmSwap: (id) => request(`/api/swaps/${id}/confirm`, { method: 'PUT' }),
+  rejectCounter: (id) => request(`/api/swaps/${id}/reject-counter`, { method: 'PUT' }),
   declineSwap: (id) => request(`/api/swaps/${id}/decline`, { method: 'PUT' }),
 
   updateProfile: (fields) =>
