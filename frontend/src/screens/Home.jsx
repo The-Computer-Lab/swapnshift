@@ -122,7 +122,7 @@ function SixMonthCalendar({ shiftGroup }) {
 
 // ── Main component ────────────────────────────────────────────────────────────
 
-export default function Home({ user, onLogout, onGoAdmin, onGoLanding }) {
+export default function Home({ user, onLogout, onGoAdmin, onGoLanding, onGoProfile }) {
   const [swaps, setSwaps] = useState([]);
   const [loadingSwaps, setLoadingSwaps] = useState(true);
   const [swapError, setSwapError] = useState('');
@@ -221,7 +221,7 @@ export default function Home({ user, onLogout, onGoAdmin, onGoLanding }) {
       <header>
         <button className="logo-btn" onClick={onGoLanding}>SwapNShift</button>
         <div className="header-right">
-          <span>{user.name} · Shift {user.shift}</span>
+          <button className="link-btn" onClick={onGoProfile}>{user.name} · Shift {user.shift}</button>
           {onGoAdmin && <button className="link-btn" onClick={onGoAdmin}>Admin panel</button>}
           <button className="link-btn" onClick={handleLogout}>Sign out</button>
         </div>
@@ -311,6 +311,7 @@ export default function Home({ user, onLogout, onGoAdmin, onGoLanding }) {
               <p className="muted">No open swaps right now.</p>
             )}
             {swaps.length > 0 && (
+            <div className="table-scroll">
               <table>
                 <thead>
                   <tr>
@@ -341,6 +342,7 @@ export default function Home({ user, onLogout, onGoAdmin, onGoLanding }) {
                   ))}
                 </tbody>
               </table>
+            </div>
             )}
           </section>
         </main>
