@@ -16,7 +16,6 @@ export default function Login({ onLogin, onGoRegister, onGoBack }) {
       localStorage.setItem('token', data.token);
       const user = data.user;
       if (!user.shift && user.crew) user.shift = user.crew;
-      console.log('user on login:', { id: user.id, name: user.name, shift: user.shift });
       onLogin(user);
     } catch (err) {
       setError(err.message);

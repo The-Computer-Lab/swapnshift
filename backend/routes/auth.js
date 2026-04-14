@@ -2,17 +2,33 @@ const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const rateLimit = require('express-rate-limit');
 const { createClient } = require('@supabase/supabase-js');
 const { authenticateToken } = require('../middleware/auth');
 const { sendAdminRegistrationEmail } = require('../utils/email');
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 20,
+  message: { error: 'Too many attempts — please try again in 15 minutes' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_SERVICE_KEY
 );
 
-router.post('/register', async (req, res) => {
+const VALID_SHIFTS = ['J', 'K', 'L', 'M', 'N'];
+
+router.post('/register', authLimiter, async (req, res) => {
   const { name, email, password, shift } = req.body;
+
+  if (!name || !name.trim()) return res.status(400).json({ error: 'Name is required' });
+  if (!email || !email.trim()) return res.status(400).json({ error: 'Email is required' });
+  if (!password || password.length < 6) return res.status(400).json({ error: 'Password must be at least 6 characters' });
+  if (!VALID_SHIFTS.includes(shift)) return res.status(400).json({ error: 'Shift must be J, K, L, M, or N' });
 
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -35,7 +51,7 @@ router.post('/register', async (req, res) => {
   }
 });
 
-router.post('/login', async (req, res) => {
+router.post('/login', authLimiter, async (req, res) => {
   const { email, password } = req.body;
 
   try {
@@ -45,11 +61,11 @@ router.post('/login', async (req, res) => {
       .eq('email', email)
       .single();
 
-    if (error || !data) return res.status(400).json({ error: 'User not found' });
+    if (error || !data) return res.status(400).json({ error: 'Invalid email or password' });
     if (data.status === 'pending') return res.status(403).json({ error: 'Account awaiting admin approval' });
 
     const validPassword = await bcrypt.compare(password, data.password);
-    if (!validPassword) return res.status(400).json({ error: 'Incorrect password' });
+    if (!validPassword) return res.status(400).json({ error: 'Invalid email or password' });
 
     const token = jwt.sign(
       { id: data.id, name: data.name, email: data.email, role: data.role, shift: data.shift },
