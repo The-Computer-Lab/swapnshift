@@ -40,6 +40,8 @@ export const api = {
   updateProfile: (fields) =>
     request('/api/auth/profile', { method: 'PUT', body: fields }),
 
+  getSwapHistory: () => request('/api/swaps/history'),
+
   // Admin
   getPendingUsers: () => request('/api/admin/users/pending'),
   getAllUsers: () => request('/api/admin/users'),

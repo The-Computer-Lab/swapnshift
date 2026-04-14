@@ -578,6 +578,72 @@ tr:last-child td { border-bottom: none; }
 .status-pending  { background: #fffbeb; color: #d97706; }
 .status-rejected { background: #fef2f2; color: #dc2626; }
 
+/* ── Bottom nav ── */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #fff;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  z-index: 20;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.bottom-nav-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.6rem 0.25rem;
+  background: none;
+  border: none;
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: #888;
+  cursor: pointer;
+  transition: color 0.15s;
+}
+
+.bottom-nav-btn:hover { color: #4f46e5; }
+.bottom-nav-btn--active { color: #4f46e5; }
+
+/* ── Tab content area ── */
+.tab-content {
+  flex: 1;
+  padding-bottom: 80px;
+}
+
+.tab-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 1.5rem;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+/* ── History items ── */
+.history-item {
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.history-item:last-of-type { border-bottom: none; }
+
+.history-names {
+  font-size: 0.92rem;
+  color: #1a1a2e;
+}
+
+.history-detail {
+  font-size: 0.82rem;
+  color: #888;
+  margin-top: 0.2rem;
+}
+
 /* ── Rota grid ── */
 .rota-grid {
   display: grid;

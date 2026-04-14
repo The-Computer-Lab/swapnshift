@@ -54,6 +54,28 @@ router.post('/', authenticateToken, async (req, res) => {
   }
 });
 
+// GET /api/swaps/history — fetch accepted swaps from the last 12 months
+router.get('/history', authenticateToken, async (req, res) => {
+  const from = new Date();
+  from.setFullYear(from.getFullYear() - 1);
+  const fromDate = from.toISOString().split('T')[0];
+
+  try {
+    const { data, error } = await supabase
+      .from('swaps')
+      .select('*, requester:users!requester_id(id, name, shift), acceptor:users!acceptor_id(id, name, shift)')
+      .eq('status', 'accepted')
+      .gte('shift_date', fromDate)
+      .order('shift_date', { ascending: false });
+
+    if (error) return res.status(400).json({ error: error.message });
+
+    res.json({ swaps: data });
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 // GET /api/swaps — fetch all open swaps
 router.get('/', authenticateToken, async (req, res) => {
   try {

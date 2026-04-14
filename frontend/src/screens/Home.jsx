@@ -46,7 +46,7 @@ function get6MonthCalendar(shiftGroup) {
     const year = first.getFullYear();
     const month = first.getMonth();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
-    const startDow = first.getDay(); // 0=Sun
+    const startDow = first.getDay();
     const days = [];
     for (let d = 1; d <= daysInMonth; d++) {
       const date = new Date(year, month, d);
@@ -59,21 +59,27 @@ function get6MonthCalendar(shiftGroup) {
 
 // ── Date formatting ───────────────────────────────────────────────────────────
 
-const MONTHS     = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const MONTHS      = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const MONTHS_FULL = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-const DAYS       = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-const DAYS_SHORT = ['S','M','T','W','T','F','S'];
+const DAYS        = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const DAYS_SHORT  = ['S','M','T','W','T','F','S'];
 
 function formatDate(isoStr) {
   const [y, m, d] = isoStr.split('-').map(Number);
   return `${d} ${MONTHS[m - 1]} ${y}`;
 }
 
+function formatDateLong(isoStr) {
+  const [y, m, d] = isoStr.split('-').map(Number);
+  const date = new Date(y, m - 1, d);
+  return `${DAYS[date.getDay()]} ${d} ${MONTHS_FULL[m - 1]} ${y}`;
+}
+
 function formatRotaDate(date) {
   return `${DAYS[date.getDay()]} ${date.getDate()} ${MONTHS[date.getMonth()]}`;
 }
 
-// ── 6-month calendar component ────────────────────────────────────────────────
+// ── 6-month calendar ──────────────────────────────────────────────────────────
 
 function SixMonthCalendar({ shiftGroup }) {
   const today = new Date();
@@ -84,17 +90,10 @@ function SixMonthCalendar({ shiftGroup }) {
     <div className="cal-months">
       {calendar.map(({ year, month, startDow, days }) => (
         <div key={`${year}-${month}`} className="cal-month">
-          <div className="cal-month-header">
-            {MONTHS_FULL[month]} {year}
-          </div>
+          <div className="cal-month-header">{MONTHS_FULL[month]} {year}</div>
           <div className="cal-grid">
-            {DAYS_SHORT.map((d, i) => (
-              <div key={i} className="cal-dow">{d}</div>
-            ))}
-            {/* empty cells before first day */}
-            {Array.from({ length: startDow }, (_, i) => (
-              <div key={`empty-${i}`} className="cal-empty" />
-            ))}
+            {DAYS_SHORT.map((d, i) => <div key={i} className="cal-dow">{d}</div>)}
+            {Array.from({ length: startDow }, (_, i) => <div key={`empty-${i}`} className="cal-empty" />)}
             {days.map(({ date, shift }) => {
               const isToday = date.getTime() === today.getTime();
               return (
@@ -110,7 +109,6 @@ function SixMonthCalendar({ shiftGroup }) {
           </div>
         </div>
       ))}
-
       <div className="cal-legend">
         <span className="cal-legend-item cal-legend--day">Day</span>
         <span className="cal-legend-item cal-legend--night">Night</span>
@@ -122,20 +120,50 @@ function SixMonthCalendar({ shiftGroup }) {
 
 // ── Main component ────────────────────────────────────────────────────────────
 
-export default function Home({ user, onLogout, onGoAdmin, onGoLanding, onGoProfile }) {
+export default function Home({ user, onLogout, onGoAdmin, onGoLanding, onProfileUpdated }) {
+  const [activeTab, setActiveTab] = useState('rota');
+
+  // ── Swaps state ──
   const [swaps, setSwaps] = useState([]);
   const [loadingSwaps, setLoadingSwaps] = useState(true);
   const [swapError, setSwapError] = useState('');
   const [actionMsg, setActionMsg] = useState(null);
-
   const [form, setForm] = useState({ shift_date: '', shift_date_end: '', shift_type: '', notes: '' });
   const [formError, setFormError] = useState('');
   const [formLoading, setFormLoading] = useState(false);
   const [formSuccess, setFormSuccess] = useState('');
 
+  // ── History state ──
+  const [history, setHistory] = useState([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [historyError, setHistoryError] = useState('');
+  const [showAllHistory, setShowAllHistory] = useState(false);
+  const [historyFetched, setHistoryFetched] = useState(false);
+
+  // ── Profile state ──
+  const [profileName, setProfileName] = useState(user.name);
+  const [profileEmail, setProfileEmail] = useState(user.email);
+  const [profileShift, setProfileShift] = useState(user.shift);
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [profileLoading, setProfileLoading] = useState(false);
+  const [profileError, setProfileError] = useState('');
+  const [profileSuccess, setProfileSuccess] = useState('');
+
   const rotaDays = getNext14Days(user.shift);
 
   useEffect(() => { fetchSwaps(); }, []);
+
+  useEffect(() => {
+    setProfileName(user.name);
+    setProfileEmail(user.email);
+    setProfileShift(user.shift);
+  }, [user.name, user.email, user.shift]);
+
+  useEffect(() => {
+    if (activeTab === 'history' && !historyFetched) fetchHistory();
+  }, [activeTab]);
 
   async function fetchSwaps() {
     setLoadingSwaps(true);
@@ -147,6 +175,20 @@ export default function Home({ user, onLogout, onGoAdmin, onGoLanding, onGoProfi
       setSwapError(err.message);
     } finally {
       setLoadingSwaps(false);
+    }
+  }
+
+  async function fetchHistory() {
+    setHistoryLoading(true);
+    setHistoryError('');
+    try {
+      const data = await api.getSwapHistory();
+      setHistory(data.swaps);
+      setHistoryFetched(true);
+    } catch (err) {
+      setHistoryError(err.message);
+    } finally {
+      setHistoryLoading(false);
     }
   }
 
@@ -166,11 +208,7 @@ export default function Home({ user, onLogout, onGoAdmin, onGoLanding, onGoProfi
     try {
       const start = parseLocalDate(form.shift_date);
       const end = form.shift_date_end ? parseLocalDate(form.shift_date_end) : start;
-      if (end < start) {
-        setFormError('End date must be on or after the start date.');
-        setFormLoading(false);
-        return;
-      }
+      if (end < start) { setFormError('End date must be on or after the start date.'); setFormLoading(false); return; }
       const dates = [];
       for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
         const y = d.getFullYear();
@@ -211,150 +249,268 @@ export default function Home({ user, onLogout, onGoAdmin, onGoLanding, onGoProfi
     }
   }
 
+  async function handleProfileSave(e) {
+    e.preventDefault();
+    setProfileError('');
+    setProfileSuccess('');
+    if (newPassword && newPassword !== confirmPassword) { setProfileError('New passwords do not match.'); return; }
+    const fields = {};
+    if (profileName !== user.name) fields.name = profileName;
+    if (profileEmail !== user.email) fields.email = profileEmail;
+    if (profileShift !== user.shift) fields.shift = profileShift;
+    if (newPassword) { fields.currentPassword = currentPassword; fields.newPassword = newPassword; }
+    if (Object.keys(fields).length === 0) { setProfileError('No changes to save.'); return; }
+    setProfileLoading(true);
+    try {
+      const data = await api.updateProfile(fields);
+      localStorage.setItem('token', data.token);
+      if (onProfileUpdated) onProfileUpdated(data.token);
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+      setProfileSuccess('Profile updated.');
+    } catch (err) {
+      setProfileError(err.message);
+    } finally {
+      setProfileLoading(false);
+    }
+  }
+
   function handleLogout() {
     localStorage.removeItem('token');
     onLogout();
   }
 
+  const visibleHistory = showAllHistory ? history : history.slice(0, 10);
+
   return (
     <div className="home">
       <header>
         <button className="logo-btn" onClick={onGoLanding}>SwapNShift</button>
-        <div className="header-right">
-          <button className="link-btn" onClick={onGoProfile}>{user.name} · Shift {user.shift}</button>
-          {onGoAdmin && <button className="link-btn" onClick={onGoAdmin}>Admin panel</button>}
-          <button className="link-btn" onClick={handleLogout}>Sign out</button>
-        </div>
+        <button className="link-btn" onClick={handleLogout}>Sign out</button>
       </header>
 
-      <div className="home-body">
-        {/* Left column */}
-        <main className="home-main">
+      <div className="tab-content">
 
-          {/* 14-day rota strip */}
-          <section className="panel">
-            <h2>Your rota — next 14 days</h2>
-            {rotaDays[0].shift === null ? (
-              <p className="muted">No rota data for shift {user.shift}.</p>
-            ) : (
-              <div className="rota-grid">
-                {rotaDays.map(({ date, shift }, i) => (
-                  <div key={i} className={`rota-cell rota-${shift.toLowerCase()}`}>
-                    <span className="rota-date">{formatRotaDate(date)}</span>
-                    <span className="rota-shift">{shift}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </section>
-
-          {/* Post a swap */}
-          <section className="panel">
-            <h2>Post the shifts you want a colleague to cover for you!</h2>
-            <form onSubmit={handleCreateSwap} className="inline-form">
-              <div className="form-row">
-                <div className="field">
-                  <label>Start date</label>
-                  <input
-                    type="date"
-                    value={form.shift_date}
-                    onChange={setField('shift_date')}
-                    required
-                  />
-                </div>
-                <div className="field">
-                  <label>End date <span className="label-optional">(optional)</span></label>
-                  <input
-                    type="date"
-                    value={form.shift_date_end}
-                    onChange={setField('shift_date_end')}
-                    min={form.shift_date || undefined}
-                  />
-                </div>
-                <div className="field">
-                  <label>Shift type</label>
-                  <select value={form.shift_type} onChange={setField('shift_type')} required>
-                    <option value="">Select…</option>
-                    <option value="Day">Day</option>
-                    <option value="Night">Night</option>
-                  </select>
-                </div>
-                <div className="field field--grow">
-                  <label>Notes (optional)</label>
-                  <input
-                    type="text"
-                    placeholder="Any details…"
-                    value={form.notes}
-                    onChange={setField('notes')}
-                  />
-                </div>
-                <button type="submit" className="post-btn" disabled={formLoading}>
-                  {formLoading ? 'Posting…' : 'Post'}
-                </button>
-              </div>
-              {formError && <p className="error">{formError}</p>}
-              {formSuccess && <p className="success">{formSuccess}</p>}
-            </form>
-          </section>
-
-          {/* Open swaps */}
-          <section className="panel">
-            <h2>Open swap requests</h2>
-            {actionMsg && (
-              <p className={actionMsg.type === 'success' ? 'success' : 'error'} style={{ marginBottom: '0.75rem' }}>
-                {actionMsg.text}
-              </p>
-            )}
-            {loadingSwaps && <p className="muted">Loading…</p>}
-            {swapError && <p className="error">{swapError}</p>}
-            {!loadingSwaps && !swapError && swaps.length === 0 && (
-              <p className="muted">No open swaps right now.</p>
-            )}
-            {swaps.length > 0 && (
-            <div className="table-scroll">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Date</th>
-                    <th>Type</th>
-                    <th>Posted by</th>
-                    <th>Shift</th>
-                    <th>Notes</th>
-                    <th></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {swaps.map(swap => (
-                    <tr key={swap.id}>
-                      <td>{formatDate(swap.shift_date)}</td>
-                      <td>{swap.shift_time}</td>
-                      <td>{swap.requester?.name ?? '—'}</td>
-                      <td>{swap.requester?.shift ?? '—'}</td>
-                      <td>{swap.notes ?? '—'}</td>
-                      <td>
-                        {swap.requester_id === user.id ? (
-                          <button className="decline-btn" onClick={() => handleDecline(swap.id)}>Remove</button>
-                        ) : (
-                          <button className="accept-btn" onClick={() => handleAccept(swap.id)}>Accept</button>
-                        )}
-                      </td>
-                    </tr>
+        {/* ── Rota tab ── */}
+        {activeTab === 'rota' && (
+          <div className="tab-page">
+            <section className="panel">
+              <h2>Your rota — next 14 days</h2>
+              {rotaDays[0].shift === null ? (
+                <p className="muted">No rota data for shift {user.shift}.</p>
+              ) : (
+                <div className="rota-grid">
+                  {rotaDays.map(({ date, shift }, i) => (
+                    <div key={i} className={`rota-cell rota-${shift.toLowerCase()}`}>
+                      <span className="rota-date">{formatRotaDate(date)}</span>
+                      <span className="rota-shift">{shift}</span>
+                    </div>
                   ))}
-                </tbody>
-              </table>
-            </div>
-            )}
-          </section>
-        </main>
+                </div>
+              )}
+            </section>
 
-        {/* Right column — 6-month calendar */}
-        <aside className="home-sidebar">
-          <div className="panel">
-            <h2>6-month rota — Shift {user.shift}</h2>
-            <SixMonthCalendar shiftGroup={user.shift} />
+            <section className="panel">
+              <h2>6-month rota — Shift {user.shift}</h2>
+              <SixMonthCalendar shiftGroup={user.shift} />
+            </section>
           </div>
-        </aside>
+        )}
+
+        {/* ── Swaps tab ── */}
+        {activeTab === 'swaps' && (
+          <div className="tab-page">
+            <section className="panel">
+              <h2>Post the shifts you want a colleague to cover for you!</h2>
+              <form onSubmit={handleCreateSwap} className="inline-form">
+                <div className="form-row">
+                  <div className="field">
+                    <label>Start date</label>
+                    <input type="date" value={form.shift_date} onChange={setField('shift_date')} required />
+                  </div>
+                  <div className="field">
+                    <label>End date <span className="label-optional">(optional)</span></label>
+                    <input type="date" value={form.shift_date_end} onChange={setField('shift_date_end')} min={form.shift_date || undefined} />
+                  </div>
+                  <div className="field">
+                    <label>Shift type</label>
+                    <select value={form.shift_type} onChange={setField('shift_type')} required>
+                      <option value="">Select…</option>
+                      <option value="Day">Day</option>
+                      <option value="Night">Night</option>
+                    </select>
+                  </div>
+                  <div className="field field--grow">
+                    <label>Notes (optional)</label>
+                    <input type="text" placeholder="Any details…" value={form.notes} onChange={setField('notes')} />
+                  </div>
+                  <button type="submit" className="post-btn" disabled={formLoading}>
+                    {formLoading ? 'Posting…' : 'Post'}
+                  </button>
+                </div>
+                {formError && <p className="error">{formError}</p>}
+                {formSuccess && <p className="success">{formSuccess}</p>}
+              </form>
+            </section>
+
+            <section className="panel">
+              <h2>Open swap requests</h2>
+              {actionMsg && (
+                <p className={actionMsg.type === 'success' ? 'success' : 'error'} style={{ marginBottom: '0.75rem' }}>
+                  {actionMsg.text}
+                </p>
+              )}
+              {loadingSwaps && <p className="muted">Loading…</p>}
+              {swapError && <p className="error">{swapError}</p>}
+              {!loadingSwaps && !swapError && swaps.length === 0 && (
+                <p className="muted">No open swaps right now.</p>
+              )}
+              {swaps.length > 0 && (
+                <div className="table-scroll">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Date</th>
+                        <th>Type</th>
+                        <th>Posted by</th>
+                        <th>Shift</th>
+                        <th>Notes</th>
+                        <th></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {swaps.map(swap => (
+                        <tr key={swap.id}>
+                          <td>{formatDate(swap.shift_date)}</td>
+                          <td>{swap.shift_time}</td>
+                          <td>{swap.requester?.name ?? '—'}</td>
+                          <td>{swap.requester?.shift ?? '—'}</td>
+                          <td>{swap.notes ?? '—'}</td>
+                          <td>
+                            {swap.requester_id === user.id ? (
+                              <button className="decline-btn" onClick={() => handleDecline(swap.id)}>Remove</button>
+                            ) : (
+                              <button className="accept-btn" onClick={() => handleAccept(swap.id)}>Accept</button>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </section>
+          </div>
+        )}
+
+        {/* ── History tab ── */}
+        {activeTab === 'history' && (
+          <div className="tab-page">
+            <section className="panel">
+              <h2>Swap history</h2>
+              {historyLoading && <p className="muted">Loading…</p>}
+              {historyError && <p className="error">{historyError}</p>}
+              {!historyLoading && !historyError && history.length === 0 && (
+                <p className="muted">No completed swaps in the last 12 months.</p>
+              )}
+              {visibleHistory.map(swap => (
+                <div key={swap.id} className="history-item">
+                  <div className="history-names">
+                    <strong>{swap.acceptor?.name ?? '—'}</strong> covered <strong>{swap.requester?.name ?? '—'}</strong>
+                  </div>
+                  <div className="history-detail">
+                    {swap.shift_time} shift · {formatDateLong(swap.shift_date)}
+                  </div>
+                </div>
+              ))}
+              {!historyLoading && history.length > 10 && (
+                <button className="link-btn" style={{ marginTop: '1rem' }} onClick={() => setShowAllHistory(v => !v)}>
+                  {showAllHistory ? 'Show less' : `View all ${history.length} swaps`}
+                </button>
+              )}
+            </section>
+          </div>
+        )}
+
+        {/* ── Profile tab ── */}
+        {activeTab === 'profile' && (
+          <div className="tab-page">
+            <section className="panel">
+              <h2>Your profile</h2>
+              <form onSubmit={handleProfileSave} style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                <label>Name</label>
+                <input type="text" value={profileName} onChange={e => { setProfileSuccess(''); setProfileError(''); setProfileName(e.target.value); }} required />
+
+                <label>Email</label>
+                <input type="email" value={profileEmail} onChange={e => { setProfileSuccess(''); setProfileError(''); setProfileEmail(e.target.value); }} required />
+
+                <label>Shift group</label>
+                <select value={profileShift} onChange={e => { setProfileSuccess(''); setProfileError(''); setProfileShift(e.target.value); }} required>
+                  <option value="J">J</option>
+                  <option value="K">K</option>
+                  <option value="L">L</option>
+                  <option value="M">M</option>
+                  <option value="N">N</option>
+                </select>
+
+                <label style={{ marginTop: '1rem' }}>Current password <span className="label-optional">(required to change password)</span></label>
+                <input type="password" placeholder="Enter current password…" value={currentPassword} onChange={e => { setProfileSuccess(''); setProfileError(''); setCurrentPassword(e.target.value); }} />
+
+                <label>New password <span className="label-optional">(leave blank to keep current)</span></label>
+                <input type="password" placeholder="New password…" value={newPassword} onChange={e => { setProfileSuccess(''); setProfileError(''); setNewPassword(e.target.value); }} />
+
+                <label>Confirm new password</label>
+                <input type="password" placeholder="Confirm new password…" value={confirmPassword} onChange={e => { setProfileSuccess(''); setProfileError(''); setConfirmPassword(e.target.value); }} />
+
+                {profileError && <p className="error">{profileError}</p>}
+                {profileSuccess && <p className="success">{profileSuccess}</p>}
+
+                <button type="submit" disabled={profileLoading}>
+                  {profileLoading ? 'Saving…' : 'Save changes'}
+                </button>
+              </form>
+            </section>
+          </div>
+        )}
+
       </div>
+
+      {/* ── Bottom nav ── */}
+      <nav className="bottom-nav">
+        <button className={`bottom-nav-btn${activeTab === 'rota' ? ' bottom-nav-btn--active' : ''}`} onClick={() => setActiveTab('rota')}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+          </svg>
+          Rota
+        </button>
+        <button className={`bottom-nav-btn${activeTab === 'swaps' ? ' bottom-nav-btn--active' : ''}`} onClick={() => setActiveTab('swaps')}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>
+          </svg>
+          Swaps
+        </button>
+        <button className={`bottom-nav-btn${activeTab === 'history' ? ' bottom-nav-btn--active' : ''}`} onClick={() => setActiveTab('history')}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+          </svg>
+          History
+        </button>
+        <button className={`bottom-nav-btn${activeTab === 'profile' ? ' bottom-nav-btn--active' : ''}`} onClick={() => setActiveTab('profile')}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+          </svg>
+          Profile
+        </button>
+        {onGoAdmin && (
+          <button className="bottom-nav-btn" onClick={onGoAdmin}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/>
+            </svg>
+            Admin
+          </button>
+        )}
+      </nav>
     </div>
   );
 }

@@ -4,7 +4,6 @@ import Login from './screens/Login';
 import Register from './screens/Register';
 import Home from './screens/Home';
 import Admin from './screens/Admin';
-import Profile from './screens/Profile';
 import './App.css';
 
 function getStoredUser() {
@@ -26,7 +25,7 @@ function getStoredUser() {
 export default function App() {
   const [user, setUser] = useState(getStoredUser);
   const [authScreen, setAuthScreen] = useState('landing'); // 'landing' | 'login' | 'register'
-  const [view, setView] = useState('default');             // 'default' | 'home' | 'admin' | 'landing' | 'profile'
+  const [view, setView] = useState('default');             // 'default' | 'home' | 'admin' | 'landing'
 
   function handleLogin(loggedInUser) {
     setUser(loggedInUser);
@@ -36,7 +35,6 @@ export default function App() {
   function handleProfileUpdated(newToken) {
     const payload = JSON.parse(atob(newToken.split('.')[1]));
     setUser(payload);
-    setView('default');
   }
 
   function handleLogout() {
@@ -60,23 +58,13 @@ export default function App() {
   }
 
   if (user) {
-    if (view === 'profile') {
-      return (
-        <Profile
-          user={user}
-          onBack={() => setView('default')}
-          onProfileUpdated={handleProfileUpdated}
-        />
-      );
-    }
-
-    const showAdmin = user.role === 'admin' && view !== 'home';
+    const showAdmin = user.role === 'admin' && view === 'admin';
     if (showAdmin) {
       return (
         <Admin
           user={user}
           onLogout={handleLogout}
-          onGoHome={() => setView('home')}
+          onGoHome={() => setView('default')}
           onGoLanding={() => setView('landing')}
         />
       );
@@ -87,7 +75,7 @@ export default function App() {
         onLogout={handleLogout}
         onGoAdmin={user.role === 'admin' ? () => setView('admin') : null}
         onGoLanding={() => setView('landing')}
-        onGoProfile={() => setView('profile')}
+        onProfileUpdated={handleProfileUpdated}
       />
     );
   }
