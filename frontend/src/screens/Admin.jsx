@@ -134,7 +134,8 @@ export default function Admin({ user, onLogout, onGoHome, onGoLanding }) {
                 <p className="muted" style={{ marginTop: '1rem' }}>No pending registrations.</p>
               )}
               {pending.length > 0 && (
-                <table style={{ marginTop: '1rem' }}>
+              <div className="table-scroll" style={{ marginTop: '1rem' }}>
+                <table>
                   <thead>
                     <tr>
                       <th>Name</th>
@@ -165,6 +166,7 @@ export default function Admin({ user, onLogout, onGoHome, onGoLanding }) {
                     ))}
                   </tbody>
                 </table>
+              </div>
               )}
             </>
           )}
@@ -178,7 +180,8 @@ export default function Admin({ user, onLogout, onGoHome, onGoLanding }) {
                 <p className="muted" style={{ marginTop: '1rem' }}>No users found.</p>
               )}
               {allUsers.length > 0 && (
-                <table style={{ marginTop: '1rem' }}>
+              <div className="table-scroll" style={{ marginTop: '1rem' }}>
+                <table>
                   <thead>
                     <tr>
                       <th>Name</th>
@@ -210,6 +213,7 @@ export default function Admin({ user, onLogout, onGoHome, onGoLanding }) {
                     ))}
                   </tbody>
                 </table>
+              </div>
               )}
             </>
           )}

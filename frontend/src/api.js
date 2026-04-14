@@ -37,6 +37,9 @@ export const api = {
   acceptSwap: (id) => request(`/api/swaps/${id}/accept`, { method: 'PUT' }),
   declineSwap: (id) => request(`/api/swaps/${id}/decline`, { method: 'PUT' }),
 
+  updateProfile: (fields) =>
+    request('/api/auth/profile', { method: 'PUT', body: fields }),
+
   // Admin
   getPendingUsers: () => request('/api/admin/users/pending'),
   getAllUsers: () => request('/api/admin/users'),
