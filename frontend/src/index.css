@@ -273,6 +273,8 @@ input, select {
   outline: none;
   transition: border-color 0.15s;
   background: #fff;
+  height: 2.6rem;
+  box-sizing: border-box;
 }
 
 input:focus, select:focus { border-color: #4f46e5; }
