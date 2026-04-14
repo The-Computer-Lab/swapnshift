@@ -4,6 +4,7 @@ import { api } from '../api';
 export default function Profile({ user, onBack, onProfileUpdated }) {
   const [name, setName] = useState(user.name);
   const [email, setEmail] = useState(user.email);
+  const [shift, setShift] = useState(user.shift);
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -25,6 +26,7 @@ export default function Profile({ user, onBack, onProfileUpdated }) {
     const fields = {};
     if (name !== user.name) fields.name = name;
     if (email !== user.email) fields.email = email;
+    if (shift !== user.shift) fields.shift = shift;
     if (newPassword) {
       fields.currentPassword = currentPassword;
       fields.newPassword = newPassword;
@@ -56,7 +58,6 @@ export default function Profile({ user, onBack, onProfileUpdated }) {
       <div className="card">
         <button className="back-btn" onClick={onBack}>← Back</button>
         <h1>Your profile</h1>
-        <h2>Shift group: {user.shift}</h2>
 
         <form onSubmit={handleSubmit}>
           <label>Name</label>
@@ -74,6 +75,15 @@ export default function Profile({ user, onBack, onProfileUpdated }) {
             onChange={e => { setSuccess(''); setError(''); setEmail(e.target.value); }}
             required
           />
+
+          <label>Shift group</label>
+          <select value={shift} onChange={e => { setSuccess(''); setError(''); setShift(e.target.value); }} required>
+            <option value="J">J</option>
+            <option value="K">K</option>
+            <option value="L">L</option>
+            <option value="M">M</option>
+            <option value="N">N</option>
+          </select>
 
           <label style={{ marginTop: '1.25rem' }}>Current password <span className="label-optional">(required to change password)</span></label>
           <input

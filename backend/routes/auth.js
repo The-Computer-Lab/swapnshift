@@ -58,7 +58,7 @@ router.post('/login', async (req, res) => {
 });
 
 router.put('/profile', authenticateToken, async (req, res) => {
-  const { name, email, currentPassword, newPassword } = req.body;
+  const { name, email, shift, currentPassword, newPassword } = req.body;
   const userId = req.user.id;
 
   try {
@@ -90,6 +90,7 @@ router.put('/profile', authenticateToken, async (req, res) => {
     const updates = {};
     if (name && name !== user.name) updates.name = name;
     if (email && email !== user.email) updates.email = email;
+    if (shift && shift !== user.shift) updates.shift = shift;
     if (newPassword) updates.password = await bcrypt.hash(newPassword, 10);
 
     if (Object.keys(updates).length === 0) {
