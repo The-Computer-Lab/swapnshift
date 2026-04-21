@@ -77,6 +77,9 @@ export default function Admin({ user, onLogout, onGoHome, onGoLanding }) {
   }
 
   async function handleDelete(id) {
+    const target = allUsers.find(u => u.id === id);
+    const name = target?.name ?? 'this user';
+    if (!window.confirm(`Delete ${name}? This will also remove all their swaps and cannot be undone.`)) return;
     setActionMsg(null);
     try {
       await api.deleteUser(id);
