@@ -58,6 +58,7 @@ export default function Admin({ user, onLogout, onGoHome, onGoLanding }) {
       await api.approveUser(id);
       setActionMsg({ text: 'User approved.', type: 'success' });
       setPending(p => p.filter(u => u.id !== id));
+      setAllUsersFetched(false);
     } catch (err) {
       setActionMsg({ text: err.message, type: 'error' });
     }
@@ -69,6 +70,7 @@ export default function Admin({ user, onLogout, onGoHome, onGoLanding }) {
       await api.rejectUser(id);
       setActionMsg({ text: 'User rejected.', type: 'success' });
       setPending(p => p.filter(u => u.id !== id));
+      setAllUsersFetched(false);
     } catch (err) {
       setActionMsg({ text: err.message, type: 'error' });
     }
