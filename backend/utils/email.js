@@ -53,6 +53,9 @@ async function sendSwapAcceptedEmails({ requester, acceptor, swap }) {
   const date = new Date(swap.shift_date).toLocaleDateString('en-GB', {
     weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
   });
+  const counterDate = new Date(swap.counter_date).toLocaleDateString('en-GB', {
+    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+  });
 
   await Promise.all([
     // Email to the person who posted the swap
@@ -62,7 +65,8 @@ async function sendSwapAcceptedEmails({ requester, acceptor, swap }) {
       subject: `Your shift has been covered — ${swap.shift_date}`,
       html: `
         <p>Hi ${esc(requester.name)},</p>
-        <p><strong>${esc(acceptor.name)}</strong> has accepted your request to cover your ${esc(swap.shift_time)} shift on <strong>${esc(date)}</strong>.</p>
+        <p><strong>${esc(acceptor.name)}</strong> will cover your ${esc(swap.shift_time)} shift on <strong>${esc(date)}</strong>.</p>
+        <p>In return, you've agreed to cover their <strong>${esc(swap.counter_shift_time)} shift on ${esc(counterDate)}</strong>.</p>
         ${swap.notes ? `<p>Notes: ${esc(swap.notes)}</p>` : ''}
         <p>— The SwapNShift team</p>
       `,
@@ -74,7 +78,8 @@ async function sendSwapAcceptedEmails({ requester, acceptor, swap }) {
       subject: `Shift swap confirmed — ${swap.shift_date}`,
       html: `
         <p>Hi ${esc(acceptor.name)},</p>
-        <p>You have agreed to cover <strong>${esc(requester.name)}</strong>'s ${esc(swap.shift_time)} shift on <strong>${esc(date)}</strong>.</p>
+        <p>You've agreed to cover <strong>${esc(requester.name)}</strong>'s ${esc(swap.shift_time)} shift on <strong>${esc(date)}</strong>.</p>
+        <p>In return, <strong>${esc(requester.name)}</strong> will cover your <strong>${esc(swap.counter_shift_time)} shift on ${esc(counterDate)}</strong>.</p>
         ${swap.notes ? `<p>Notes: ${esc(swap.notes)}</p>` : ''}
         <p>— The SwapNShift team</p>
       `,
