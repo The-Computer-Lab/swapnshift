@@ -11,12 +11,25 @@ const supabase = createClient(
 
 const VALID_SHIFT_TIMES = ['Day', 'Night'];
 
+function isValidFutureDate(str) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(str)) return false;
+  const [y, m, d] = str.split('-').map(Number);
+  const date = new Date(y, m - 1, d);
+  if (date.getFullYear() !== y || date.getMonth() !== m - 1 || date.getDate() !== d) return false;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return date >= today;
+}
+
 // POST /api/swaps — create a swap request
 router.post('/', authenticateToken, async (req, res) => {
   const { shift_date, shift_time, notes } = req.body;
 
   if (!shift_date || !shift_time) {
     return res.status(400).json({ error: 'shift_date and shift_time are required' });
+  }
+  if (!isValidFutureDate(shift_date)) {
+    return res.status(400).json({ error: 'shift_date must be a valid date (YYYY-MM-DD) and not in the past' });
   }
   if (!VALID_SHIFT_TIMES.includes(shift_time)) {
     return res.status(400).json({ error: 'shift_time must be Day or Night' });
@@ -111,6 +124,9 @@ router.put('/:id/accept', authenticateToken, async (req, res) => {
 
   if (!counter_date || !counter_shift_time) {
     return res.status(400).json({ error: 'counter_date and counter_shift_time are required' });
+  }
+  if (!isValidFutureDate(counter_date)) {
+    return res.status(400).json({ error: 'counter_date must be a valid date (YYYY-MM-DD) and not in the past' });
   }
   if (!VALID_SHIFT_TIMES.includes(counter_shift_time)) {
     return res.status(400).json({ error: 'counter_shift_time must be Day or Night' });
