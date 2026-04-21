@@ -215,6 +215,7 @@ export default function Home({ user, onLogout, onGoAdmin, onGoLanding, onProfile
       await api.confirmSwap(id);
       setActionMsg({ text: 'Swap confirmed! Both parties have been notified.', type: 'success' });
       fetchPendingSwaps();
+      setHistoryFetched(false);
     } catch (err) {
       setActionMsg({ text: err.message, type: 'error' });
     }
