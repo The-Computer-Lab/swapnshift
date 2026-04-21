@@ -63,6 +63,7 @@ router.post('/login', authLimiter, async (req, res) => {
 
     if (error || !data) return res.status(400).json({ error: 'Invalid email or password' });
     if (data.status === 'pending') return res.status(403).json({ error: 'Account awaiting admin approval' });
+    if (data.status === 'rejected') return res.status(403).json({ error: 'Account application was not approved' });
 
     const validPassword = await bcrypt.compare(password, data.password);
     if (!validPassword) return res.status(400).json({ error: 'Invalid email or password' });
