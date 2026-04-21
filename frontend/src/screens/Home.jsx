@@ -469,7 +469,6 @@ export default function Home({ user, onLogout, onGoAdmin, onGoLanding, onProfile
                   <div key={swap.id} className="pending-card">
                     <p><strong>{swap.acceptor?.name}</strong> has offered to cover your <strong>{swap.shift_time}</strong> shift on <strong>{formatDateLong(swap.shift_date)}</strong>.</p>
                     <p className="pending-counter">In return they want you to cover their <strong>{swap.counter_shift_time}</strong> shift on <strong>{formatDateLong(swap.counter_date)}</strong>.</p>
-                    {actionMsg && <p className={actionMsg.type === 'success' ? 'success' : 'error'}>{actionMsg.text}</p>}
                     <div className="action-btns" style={{ marginTop: '0.75rem' }}>
                       <button className="accept-btn" onClick={() => handleConfirm(swap.id)}>Accept swap</button>
                       <button className="decline-btn" onClick={() => handleRejectCounter(swap.id)}>Decline</button>
