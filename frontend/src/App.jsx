@@ -4,7 +4,6 @@ import Login from './screens/Login';
 import Register from './screens/Register';
 import Home from './screens/Home';
 import Admin from './screens/Admin';
-import './App.css';
 
 function getStoredUser() {
   const token = localStorage.getItem('token');
@@ -45,7 +44,7 @@ export default function App() {
   }
 
   // Landing page — shown to logged-in users who navigate back to it
-  if (authScreen === 'landing' && !user || view === 'landing') {
+  if ((authScreen === 'landing' && !user) || view === 'landing') {
     return (
       <Landing
         user={user}

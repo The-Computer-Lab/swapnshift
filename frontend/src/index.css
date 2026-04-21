@@ -484,34 +484,6 @@ header h1 { font-size: 1.3rem; font-weight: 800; color: #4f46e5; }
   .header-right { font-size: 0.82rem; gap: 0.5rem; }
 }
 
-/* two-column home layout */
-.home-body {
-  display: flex;
-  align-items: flex-start;
-  gap: 1.5rem;
-  padding: 2rem;
-  max-width: 1400px;
-  width: 100%;
-  margin: 0 auto;
-}
-
-.home-main {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-}
-
-.home-sidebar {
-  width: 320px;
-  flex-shrink: 0;
-}
-
-@media (max-width: 1024px) {
-  .home-body { flex-direction: column; }
-  .home-sidebar { width: 100%; }
-}
 
 main {
   padding: 2rem;
