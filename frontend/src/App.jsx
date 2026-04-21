@@ -25,7 +25,7 @@ function getStoredUser() {
 export default function App() {
   const [user, setUser] = useState(getStoredUser);
   const [authScreen, setAuthScreen] = useState('landing'); // 'landing' | 'login' | 'register'
-  const [view, setView] = useState('default');             // 'default' | 'home' | 'admin' | 'landing'
+  const [view, setView] = useState(() => getStoredUser() ? 'landing' : 'default'); // 'default' | 'home' | 'admin' | 'landing'
 
   function handleLogin(loggedInUser) {
     setUser(loggedInUser);

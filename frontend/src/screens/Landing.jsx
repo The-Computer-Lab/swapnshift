@@ -1,8 +1,20 @@
 import { useState } from 'react';
 import HowToUse from '../components/HowToUse';
+import { getNextShift } from '../utils/rota';
+
+const DAYS_FULL   = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const MONTHS_FULL = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+function formatNextShiftDate(date) {
+  return `${DAYS_FULL[date.getDay()]} ${date.getDate()} ${MONTHS_FULL[date.getMonth()]}`;
+}
 
 export default function Landing({ user, onGoLogin, onGoRegister, onGoApp, onLogout }) {
   const [showGuide, setShowGuide] = useState(false);
+
+  const firstName  = user ? user.name.split(' ')[0] : '';
+  const nextShift  = user ? getNextShift(user.shift) : null;
+
   return (
     <div className="landing">
       {showGuide && <HowToUse onClose={() => setShowGuide(false)} />}
@@ -35,22 +47,39 @@ export default function Landing({ user, onGoLogin, onGoRegister, onGoApp, onLogo
 
       {/* Hero */}
       <section className="hero">
-        <div className="hero-inner">
-          <div className="hero-badge">Built by G. Rhodes, specifically for AGR grafters — you're welcome.</div>
-          <h1 className="hero-title">
-            Swap shifts.<br />No hassle.
-          </h1>
-          <p className="hero-sub">
-            Because life's too short to spend your days off texting round the whole team
-            asking who can cover a Thursday night. Post your swap, get notified, sorted.
-            You're welcome, AGR.
-          </p>
-          <div className="hero-actions">
-            <button className="btn-primary" onClick={onGoRegister}>Get started</button>
-            <button className="btn-ghost" onClick={onGoLogin}>I already have an account</button>
+        {user ? (
+          <div className="hero-inner">
+            <div className="hero-badge">Welcome back</div>
+            <h1 className="hero-title">Hi, {firstName}.</h1>
+            {nextShift ? (
+              <p className="hero-sub">
+                Your next shift is a <strong>{nextShift.shift}</strong> — {formatNextShiftDate(nextShift.date)}.
+              </p>
+            ) : (
+              <p className="hero-sub">You're off for the next two weeks.</p>
+            )}
+            <div className="hero-actions">
+              <button className="btn-primary" onClick={onGoApp}>Go to app</button>
+            </div>
           </div>
-          <button className="how-to-link" onClick={() => setShowGuide(true)}>How does it work?</button>
-        </div>
+        ) : (
+          <div className="hero-inner">
+            <div className="hero-badge">Built by G. Rhodes, specifically for AGR grafters — you're welcome.</div>
+            <h1 className="hero-title">
+              Swap shifts.<br />No hassle.
+            </h1>
+            <p className="hero-sub">
+              Because life's too short to spend your days off texting round the whole team
+              asking who can cover a Thursday night. Post your swap, get notified, sorted.
+              You're welcome, AGR.
+            </p>
+            <div className="hero-actions">
+              <button className="btn-primary" onClick={onGoRegister}>Get started</button>
+              <button className="btn-ghost" onClick={onGoLogin}>I already have an account</button>
+            </div>
+            <button className="how-to-link" onClick={() => setShowGuide(true)}>How does it work?</button>
+          </div>
+        )}
       </section>
 
       {/* Features */}

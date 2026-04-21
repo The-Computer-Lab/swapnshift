@@ -1,31 +1,13 @@
 import { useState, useEffect } from 'react';
 import { api } from '../api';
 import HowToUse from '../components/HowToUse';
+import { getShift } from '../utils/rota';
 
 // ── Shift rota helpers ────────────────────────────────────────────────────────
-
-const SHIFT_ANCHORS = {
-  K: '2025-05-28',
-  J: '2025-05-30',
-  L: '2025-06-01',
-  M: '2025-06-03',
-  N: '2025-06-05',
-};
-
-const CYCLE = ['Day', 'Day', 'Night', 'Night', 'Off', 'Off', 'Off', 'Off', 'Off', 'Off'];
 
 function parseLocalDate(str) {
   const [y, m, d] = str.split('-').map(Number);
   return new Date(y, m - 1, d);
-}
-
-function getShift(shiftGroup, date) {
-  const anchorStr = SHIFT_ANCHORS[shiftGroup];
-  if (!anchorStr) return null;
-  const anchor = parseLocalDate(anchorStr);
-  const diffDays = Math.round((date - anchor) / 86_400_000);
-  const pos = ((diffDays % 10) + 10) % 10;
-  return CYCLE[pos];
 }
 
 function getNext14Days(shiftGroup) {
