@@ -9,12 +9,17 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_KEY
 );
 
+const VALID_SHIFT_TIMES = ['Day', 'Night'];
+
 // POST /api/swaps — create a swap request
 router.post('/', authenticateToken, async (req, res) => {
   const { shift_date, shift_time, notes } = req.body;
 
   if (!shift_date || !shift_time) {
     return res.status(400).json({ error: 'shift_date and shift_time are required' });
+  }
+  if (!VALID_SHIFT_TIMES.includes(shift_time)) {
+    return res.status(400).json({ error: 'shift_time must be Day or Night' });
   }
 
   try {
@@ -106,6 +111,9 @@ router.put('/:id/accept', authenticateToken, async (req, res) => {
 
   if (!counter_date || !counter_shift_time) {
     return res.status(400).json({ error: 'counter_date and counter_shift_time are required' });
+  }
+  if (!VALID_SHIFT_TIMES.includes(counter_shift_time)) {
+    return res.status(400).json({ error: 'counter_shift_time must be Day or Night' });
   }
 
   try {
